@@ -1,0 +1,19 @@
+rules_version = '2';
+// Precinct Zero: anyone signed in can read the directory;
+// each detective can only write their own entry.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /detectives/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 28
+        && request.resource.data.badge is string
+        && request.resource.data.badge.matches('PZ-[0-9]{4}')
+        && request.resource.data.posts is list
+        && request.resource.data.posts.size() <= 25;
+    }
+  }
+}
