@@ -43,6 +43,7 @@
     DIR.uid = cred.user.uid;
     DIR.db = { firebase: true };
     DIR.canWrite = true;
+        SYNC.kind = "firebase"; SYNC.store = fs; SYNC.uid = cred.user.uid; syncReady();
     fs.collection("detectives").orderBy("updated", "desc").limit(200).onSnapshot(snap => {
       DIR.dets = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
       const first = !DIR.ready;
