@@ -212,7 +212,7 @@ function vaultCard(id){
   <h2>${k.title}</h2><p>${k.blurb}</p>
   <div class="vfaces" aria-label="Suspects">${faces}</div>
   <div class="meta"><span class="chip">${Object.keys(k.SUS).length} suspects</span><span class="chip">${k.order.length} exhibits</span><span class="chip">${k.OBJ.length} objectives</span><span class="chip diff">Difficulty&nbsp;${[1,2,3,4,5].map(i=>`<i class="${i<=k.diff?"on":""}"></i>`).join("")}</span></div>
-  <div class="acts">${open?`<button class="btn primary small" data-act="open" data-id="${id}">${started?"Continue":"Take the case"}</button><button class="btn small" data-act="roomCreate" data-id="${id}">Case room</button>${started?`<button class="btn small" data-act="resetCase" data-id="${id}">Restart</button>`:""}`:`<button class="btn small" data-act="override" data-id="${id}">Request override</button>`}</div></div></div>`;
+  <div class="acts">${open?`<button class="btn primary small" data-act="open" data-id="${id}">${started?"Continue":"Take the case"}</button><button class="btn small" data-act="roomCreate" data-id="${id}">Case room</button>${G.open.includes(id)&&clearance()<k.clearance?`<button class="btn small" data-act="reseal" data-id="${id}">Re-seal</button>`:""}${started?`<button class="btn small" data-act="resetCase" data-id="${id}">Restart</button>`:""}`:`<button class="btn small" data-act="override" data-id="${id}">Request override</button>`}</div></div></div>`;
 }
 function openCase(id){
   if(ROOM.on&&ROOM.meta&&ROOM.meta.caseId!==id) leaveRoom(true);
@@ -1272,6 +1272,10 @@ document.addEventListener("click",e=>{
   const a=e.target.closest("[data-act]"); if(!a) return;
   if(a.dataset.act==="roomCreate"){ createRoom(a.dataset.id); }
   if(a.dataset.act==="roomRejoin"&&G.room){ joinRoom(G.room.code); }
+    if(a.dataset.act==="reseal"){ const id=a.dataset.id;
+    if(a.dataset.confirm!=="1"){ a.dataset.confirm="1"; a.textContent="Tap again to re-seal"; return; }
+    G.open=G.open.filter(x=>x!==id); if(G.room&&G.room.caseId===id&&!ROOM.on) G.room=null; save(); sfx("stamp"); render();
+    toast(`${CASES[id].title} is sealed again. Your progress on it is kept.`); }
   if(a.dataset.act==="leaveRoom"){ leaveRoom(false); }
   if(a.dataset.act==="copyRoom"){ const t=ROOM.code; try{ navigator.clipboard.writeText(t).then(()=>toast(`Room code ${t} copied`),()=>toast(`Room code: ${t}`)); }catch(err){ toast(`Room code: ${t}`); } }
 });
