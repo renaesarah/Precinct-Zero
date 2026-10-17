@@ -374,6 +374,7 @@ const app=document.getElementById("app");
 let lastTab=null;
 function render(){
   document.getElementById("partner").hidden = G.screen!=="case";
+    if(typeof ensureChatPanel==="function") ensureChatPanel();
   if(G.screen==="library"){ app.innerHTML=libraryHTML(); lastTab=null; startDirectory(); return; }
   app.innerHTML=`<header class="bar"><div class="row gut">
     <button class="btn small" id="backBtn" data-act="library">← Cases</button>
@@ -1200,6 +1201,7 @@ function subscribeRoom(){
   const live=(name)=>watch(name,rcol(name),snap=>{ const o={}; snap.docs.forEach(d=>{ o[d.id]=d.data(); }); S[name]=o; if(C.tab==="wall") safeRender(); });
   live("cards"); live("links"); live("rings");
   watch("prog",rcol("prog"),(snap,first)=>{ snap.docs.forEach(d=>{ const p=d.data(); S.prog[d.id]=p; applyProg(d.id,p,first); }); checkRecords(); save(); safeRender(); });
+    watch("chat",rcol("chat").orderBy("at","desc").limit(100),onChatSnap);
   watch("notes",rcol("notes").orderBy("at","desc").limit(120),(snap,first)=>{ const ids=new Set(S.notes.map(n=>n._id)); S.notes=snap.docs.map(d=>Object.assign({_id:d.id},d.data()));
     if(!first) S.notes.filter(n=>!ids.has(n._id)&&n.uid!==me).slice(0,1).forEach(n=>toast(`${n.name}: ${String(n.text).slice(0,70)}`));
     if(C.tab==="notebook") safeRender(); });
@@ -1230,7 +1232,7 @@ async function createRoom(caseId){
 function leaveRoom(silent){
   const was=ROOM.on&&SYNC.store?SYNC.uid:null, code=ROOM.code;
   stopRoomSubs(); if(was) rwrite(()=>SYNC.store.collection(`rooms/${code}/members`).doc(was).delete());
-  Object.assign(ROOM,{on:false,code:null,meta:null,members:{},cards:{},links:{},rings:{},notes:[],prog:{},loaded:{}});
+  Object.assign(ROOM,{on:false,code:null,meta:null,members:{},cards:{},links:{},rings:{},notes:[],chat:[],prog:{},loaded:{}}); closeChat();
   G.room=null; save(); if(!silent){ toast("You left the case room. Your progress stays with you."); render(); }
 }
 function remoteVerdict(v){
@@ -1246,7 +1248,7 @@ function remoteVerdict(v){
 }
 function roomChipHTML(){
   const ms=Object.entries(ROOM.members).filter(([,m])=>Date.now()-Date.parse(m.at||0)<45*60e3);
-  return `<span class="rlabel">Room <b>${esc(ROOM.code)}</b></span><span class="rfaces">${ms.map(([id,m])=>`<span class="rface ${id===SYNC.uid?"me":""}" title="${esc(m.name)}${id===SYNC.uid?" (you)":""} · ${esc(TABNAME[m.tab]||m.tab||"")}">${detAvatar(m)}<i>${esc(TABNAME[m.tab]||"")}</i></span>`).join("")}</span><button class="iconbtn" data-act="copyRoom">Copy code</button><button class="iconbtn" data-act="leaveRoom">Leave</button>`;
+  return `<span class="rlabel">Room <b>${esc(ROOM.code)}</b></span><span class="rfaces">${ms.map(([id,m])=>`<span class="rface ${id===SYNC.uid?"me":""}" title="${esc(m.name)}${id===SYNC.uid?" (you)":""} · ${esc(TABNAME[m.tab]||m.tab||"")}">${detAvatar(m)}<i>${esc(TABNAME[m.tab]||"")}</i></span>`).join("")}</span><button class="iconbtn rcbtn ${chatUnread?"hot":""}" data-act="chatToggle">Room radio${chatUnread?` <span class="n">${chatUnread}</span>`:""}</button><button class="iconbtn" data-act="copyRoom">Copy code</button><button class="iconbtn" data-act="leaveRoom">Leave</button>`;
 }
 function roomBoxHTML(){
   if(!SYNC.store) return `<section class="roombox"><div><h2>Case rooms</h2><p class="muted">Work a case live with friends: one evidence wall, one notebook, shared unsealing and one jury.</p></div><div class="notice">Case rooms need the online precinct: open this game signed in on claude.ai (shared with Contributor access), or set up Firebase on your own hosting. Connecting…</div></section>`;
