@@ -1280,6 +1280,47 @@ document.addEventListener("click",e=>{
   if(a.dataset.act==="copyRoom"){ const t=ROOM.code; try{ navigator.clipboard.writeText(t).then(()=>toast(`Room code ${t} copied`),()=>toast(`Room code: ${t}`)); }catch(err){ toast(`Room code: ${t}`); } }
 });
 
+/* ======================= ROOM RADIO (CHAT) ======================= */
+ROOM.chat=[]; let chatOpen=false, chatUnread=0;
+const PINGS=[["wall","Come look at the evidence wall"],["found","I've found something"],["help","I'm stuck, can someone help?"],["court","I think we're ready for court"]];
+function chatSend(text,extra){ if(!ROOM.on) return; text=String(text||"").trim().slice(0,300); if(!text) return;
+  const m=Object.assign({uid:SYNC.uid,name:detName(),text,at:iso(),tab:C.tab},extra||{}); rwrite(()=>rcol("chat").add(m)); sfx("radio"); }
+function ensureChatPanel(){
+  let p=document.getElementById("roomchat");
+  if(!ROOM.on||G.screen!=="case"){ if(p) p.remove(); return null; }
+  if(!p){ p=document.createElement("div"); p.id="roomchat"; p.className="roomchat";
+    p.innerHTML=`<div class="rchead"><span class="dled"></span><b>Room radio</b><span id="rcCode"></span><button class="iconbtn" data-act="chatToggle" aria-label="Close room radio">×</button></div>
+    <div class="rclog" id="rcLog" aria-live="polite"></div>
+    <div class="rcpings">${PINGS.map(([k,t])=>`<button class="rcping" data-act="chatPing" data-id="${k}">${esc(t)}</button>`).join("")}<button class="rcping" data-act="chatWhere">Share where I am</button></div>
+    <form class="rcform" id="rcForm" autocomplete="off"><input class="field" id="rcText" maxlength="300" placeholder="Message the room…" aria-label="Message the room"><button class="btn primary small" type="submit">Send</button></form>`;
+    document.body.appendChild(p); }
+  p.hidden=!chatOpen; return p;
+}
+function renderChat(){
+  const p=ensureChatPanel(); if(!p) return;
+  document.getElementById("rcCode").textContent=ROOM.code;
+  const log=document.getElementById("rcLog"), stick=log.scrollHeight-log.scrollTop-log.clientHeight<40;
+  const msgs=ROOM.chat.slice().reverse();
+  log.innerHTML=msgs.length?msgs.map(m=>{ const mem=ROOM.members[m.uid]||{name:m.name,color:0}, me=m.uid===SYNC.uid;
+    return `<div class="rcm ${me?"me":""} ${m.kind==="ping"?"ping":""}"><span class="rcav">${detAvatar(mem)}</span><div><small>${esc(m.name)}${me?" (you)":""} · ${esc(String(m.at).slice(11,16))}${m.tab?` · ${esc(TABNAME[m.tab]||"")}`:""}</small><span>${esc(m.text)}</span>${m.go&&!me?` <button class="rcgo" data-act="chatGo" data-id="${esc(m.go)}">Go there</button>`:""}</div></div>`; }).join("")
+    :`<p class="muted" style="margin:0;font-size:13px">Nobody's said anything yet. Say hello to your team, or use a quick call below.</p>`;
+  if(stick) log.scrollTop=log.scrollHeight;
+}
+function onChatSnap(snap,first){
+  const ids=new Set(ROOM.chat.map(m=>m._id)); ROOM.chat=snap.docs.map(d=>Object.assign({_id:d.id},d.data()));
+  const fresh=first?[]:ROOM.chat.filter(m=>!ids.has(m._id)&&m.uid!==SYNC.uid);
+  if(fresh.length){ sfx("radio"); if(!chatOpen){ chatUnread+=fresh.length; toast(`${fresh[0].name}: ${String(fresh[0].text).slice(0,70)}`); } }
+  renderChat(); renderChrome();
+}
+function closeChat(){ chatOpen=false; chatUnread=0; const p=document.getElementById("roomchat"); if(p) p.remove(); }
+document.addEventListener("submit",e=>{ if(e.target.id==="rcForm"){ e.preventDefault(); const t=document.getElementById("rcText"); chatSend(t.value); t.value=""; t.focus(); } });
+document.addEventListener("click",e=>{
+  const a=e.target.closest("[data-act]"); if(!a) return; const act=a.dataset.act, id=a.dataset.id;
+  if(act==="chatToggle"){ chatOpen=!chatOpen; if(chatOpen) chatUnread=0; renderChat(); renderChrome(); if(chatOpen){ const t=document.getElementById("rcText"); if(t) t.focus(); const l=document.getElementById("rcLog"); if(l) l.scrollTop=l.scrollHeight; } }
+  if(act==="chatPing"){ const p=PINGS.find(x=>x[0]===id); if(p) chatSend(p[1],{kind:"ping",go:id==="wall"?"wall":id==="court"?"verdict":C.tab}); }
+  if(act==="chatWhere"){ chatSend(`I'm in the ${TABNAME[C.tab]||C.tab}`,{kind:"ping",go:C.tab}); }
+  if(act==="chatGo"&&TABNAME[id]){ C.tab=id; save(); renderPanel(); window.scrollTo(0,0); }
+});
 document.querySelector("#partner .pav").innerHTML=faceSVG(FACES.aziz);
 render();
 initDirectory();
