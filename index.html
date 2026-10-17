@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Precinct Zero</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Courier+Prime:wght@400;700&family=Caveat:wght@500&family=Reenie+Beanie&family=Homemade+Apple&family=Nothing+You+Could+Do&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast" hidden></div>
+<div id="atmos" aria-hidden="true"></div>
+<div id="partner" class="partner min" hidden>
+  <button class="pav" data-act="partnerToggle" aria-label="Talk to Sgt. Aziz"><svg viewBox="0 0 60 60" aria-hidden="true"><rect width="60" height="60" fill="#22303a"/><path d="M8 60c2-14 12-19 22-19s20 5 22 19z" fill="#2c4a5c"/><path d="M24 41l6 8 6-8" fill="#e2e7ea"/><circle cx="38" cy="50" r="3" fill="#e2b13f"/><ellipse cx="30" cy="27" rx="10" ry="12" fill="#b9825f"/><path d="M19 27c0-11 5-16 12-16s11 5 11 13c-3-4-9-6-15-5-4 1-6 4-8 8z" fill="#1a1412"/><circle cx="40" cy="15" r="5" fill="#1a1412"/></svg></button>
+  <div class="pbub" role="status" aria-live="polite"><b>Sgt. Rania Aziz · your partner</b><p id="pText"></p>
+  <div class="pacts"><button class="btn small" data-act="hint">Give me a hint</button><button class="btn small" data-act="partnerHide">Got it</button></div></div>
+</div>
+<script src="js/cases.js"></script>
+<script src="js/game.js"></script>
+<!-- Precinct Directory + radio (Firebase). Paste your config into js/directory-firebase.js -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/directory-firebase.js"></script>
+<script src="js/voice.js"></script>
+</body>
+</html>
