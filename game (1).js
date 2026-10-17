@@ -1,4 +1,5 @@
 /* Precinct Zero: game engine (load after cases.js) */
+
 /* ======================= VAULT, DISPATCH EXHIBITS, INTERVIEWS ======================= */
 CASES.cold.clearance=1; CASES.static.clearance=2; CASES.ninth.clearance=3;
 (function(){
